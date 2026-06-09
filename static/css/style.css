@@ -1,0 +1,25 @@
+:root {
+  --ok: #198754;
+  --alert: #dc3545;
+}
+
+body {
+  background: #f7f7fb;
+}
+
+.sensor-card {
+  border-left: 4px solid #e9ecef;
+}
+
+.sensor-card[data-state="ok"] {
+  border-left-color: var(--ok);
+}
+
+.sensor-card[data-state="alert"] {
+  border-left-color: var(--alert);
+}
+
+.display-6 {
+  letter-spacing: -0.02em;
+}
+

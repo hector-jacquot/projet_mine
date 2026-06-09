@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set title = "Gestion des seuils" %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h4 mb-1">Gestion des capteurs / actionneurs</h1>
+      <p class="text-muted mb-0">
+        Modifiez les seuils critiques stockés dans <code>seuils_config</code>.
+      </p>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-striped align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Capteur</th>
+            <th class="text-nowrap">Seuil min</th>
+            <th class="text-nowrap">Seuil max</th>
+            <th class="text-nowrap">Dernière maj</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in seuils %}
+            <tr>
+              <td class="fw-semibold">
+                {{ capteurs_meta[s.capteur_type].label }}
+                <span class="text-muted small">({{ s.capteur_type }})</span>
+              </td>
+              <td style="max-width: 180px;">
+                  <input
+                    class="form-control form-control-sm"
+                    name="seuil_min"
+                    inputmode="decimal"
+                    value="{{ '' if s.seuil_min is none else s.seuil_min }}"
+                    placeholder="(vide)"
+                    form="form-{{ s.capteur_type }}"
+                  />
+              </td>
+              <td style="max-width: 180px;">
+                  <input
+                    class="form-control form-control-sm"
+                    name="seuil_max"
+                    inputmode="decimal"
+                    value="{{ '' if s.seuil_max is none else s.seuil_max }}"
+                    placeholder="(vide)"
+                    form="form-{{ s.capteur_type }}"
+                  />
+              </td>
+              <td class="text-muted small">{{ s.updated_at|fmt_dt }}</td>
+              <td class="text-end">
+                <form method="post" id="form-{{ s.capteur_type }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="capteur_type" value="{{ s.capteur_type }}" />
+                  <button class="btn btn-primary btn-sm" type="submit">Enregistrer</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-3 small text-muted">
+    Rappel règles : <code>lumiere</code> utilise <code>seuil_min</code> (alerte si valeur &lt; seuil),
+    les autres utilisent plutôt <code>seuil_max</code>. <code>presence</code> : alerte si valeur = 1.
+  </div>
+{% endblock %}

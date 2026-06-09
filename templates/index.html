@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% set title = "Accueil" %}
+
+{% block content %}
+  <div class="p-4 p-md-5 mb-4 rounded-3 bg-light border">
+    <div class="container-fluid py-2">
+      <h1 class="display-6 mb-2">{{ APP_NAME }}</h1>
+      <p class="lead mb-3">
+        Démonstrateur IoT pour la gestion de la sécurité et des facteurs environnementaux dans une mine
+        (projet d'ingénierie ISEP).
+      </p>
+      <div class="row g-3">
+        <div class="col-md-7">
+          <ul class="mb-0">
+            <li>Capteurs : température, humidité, luminosité, présence, CO₂, CH₄.</li>
+            <li>Actionneurs : buzzer ON dès qu'un seuil critique est franchi.</li>
+            <li>Dashboard : dernier relevé, statut OK/Alerte, historique via Chart.js.</li>
+            <li>Administration : modification dynamique des seuils en base.</li>
+          </ul>
+        </div>
+        <div class="col-md-5">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h2 class="h6">Démarrer</h2>
+              <p class="small text-muted mb-3">
+                Créez un compte, connectez-vous, puis consultez le dashboard.
+              </p>
+              <div class="d-flex gap-2">
+                <a class="btn btn-primary" href="{{ url_for('login') }}">Connexion</a>
+                <a class="btn btn-outline-primary" href="{{ url_for('register') }}">Inscription</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">Architecture</h2>
+          <p class="mb-0">
+            Flask (routes + API JSON), MySQL (pymysql), templates Jinja2, Bootstrap et Chart.js.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">Compatibilité Drizzle</h2>
+          <p class="mb-0">
+            Tables et colonnes en <code>snake_case</code> et clés simples pour rester compatibles avec
+            Drizzle ORM côté TypeScript.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
