@@ -1,43 +1,46 @@
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 :root {
-  /* Palette Claire (Défaut) */
-  --bg-color: #ffffff;
-  --text-color: #1a1a1a;
-  --primary-color: #0056b3;
-  --secondary-color: #555555;
-  --border-color: #dddddd;
-  --alert-danger: #d93025;
-  --alert-success: #188038;
-  --focus-outline: #000000;
-  
-  /* Espacements Accessibles */
-  --line-height: 1.6;
-  --letter-spacing: 0.12em;
-  --word-spacing: 0.16em;
-  --max-content-width: 80ch;
+    /* Palette Claire (Défaut) */
+    --bg-color: #ffffff;
+    --header-footer-bg: #e8f0fe; /* Subtile bleu-gris pour le header/footer */
+    --text-color: #1a1a1a;
+    --primary-color: #0056b3;
+    --secondary-color: #555555;
+    --border-color: #dddddd;
+    --alert-danger: #d93025;
+    --alert-success: #188038;
+    --focus-outline: #000000;
+    
+    /* Espacements Accessibles */
+    --line-height: 1.6;
+    --letter-spacing: 0.12em;
+    --word-spacing: 0.16em;
+    --max-content-width: 80ch;
 }
 
 [data-theme="dark"] {
-  --bg-color: #121212;
-  --text-color: #f5f5f5;
-  --primary-color: #4da3ff;
-  --secondary-color: #bbbbbb;
-  --border-color: #444444;
-  --alert-danger: #ff6b6b;
-  --alert-success: #63e6be;
-  --focus-outline: #ffffff;
+    --bg-color: #121212;
+    --header-footer-bg: #1e1e2e; /* Grisé foncé pour le thème sombre */
+    --text-color: #f5f5f5;
+    --primary-color: #4da3ff;
+    --secondary-color: #bbbbbb;
+    --border-color: #444444;
+    --alert-danger: #ff6b6b;
+    --alert-success: #63e6be;
+    --focus-outline: #ffffff;
 }
 
 [data-theme="high-contrast"] {
-  --bg-color: #000000;
-  --text-color: #ffff00;
-  --primary-color: #00ffff;
-  --secondary-color: #ffffff;
-  --border-color: #ffffff;
-  --alert-danger: #ff0000;
-  --alert-success: #00ff00;
-  --focus-outline: #ffffff;
+    --bg-color: #000000;
+    --header-footer-bg: #000000; /* On garde le noir pour conserver le contraste maximal */
+    --text-color: #ffff00;
+    --primary-color: #00ffff;
+    --secondary-color: #ffffff;
+    --border-color: #ffffff;
+    --alert-danger: #ff0000;
+    --alert-success: #00ff00;
+    --focus-outline: #ffffff;
 }
 
 /* Reset & Base */

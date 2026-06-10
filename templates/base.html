@@ -16,9 +16,9 @@
     <!-- Lien d'évitement pour l'accessibilité clavier -->
     <a href="#main-content" class="skip-link">Aller au contenu principal</a>
 
-    <header role="banner">
+    <header role="banner" style="background: var(--header-footer-bg); border-bottom: 2px solid var(--border-color);">
         <nav class="container" role="navigation" aria-label="Menu principal">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem 0; border-bottom: 2px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem 0;">
                 <a href="{{ url_for('index') }}" class="fw-bold" style="font-size: 1.5rem; text-decoration: none; color: var(--text-color);">
                     {{ APP_NAME }}
                 </a>
@@ -74,9 +74,11 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer role="contentinfo" class="container" style="margin-top: 4rem; padding: 2rem 0; border-top: 2px solid var(--border-color); text-align: center;">
-        <p>Projet IoT ISEP - {{ APP_NAME }}. Démo pédagogique accessible et inclusive.</p>
-        <p style="font-size: 0.9rem;">Utilise la police Atkinson Hyperlegible pour une lecture facilitée.</p>
+    <footer role="contentinfo" style="background: var(--header-footer-bg); border-top: 2px solid var(--border-color); margin-top: 4rem;">
+        <div class="container" style="padding: 2rem 0; text-align: center;">
+            <p>Projet IoT ISEP - {{ APP_NAME }}. Démo pédagogique accessible et inclusive.</p>
+            <p style="font-size: 0.9rem;">Utilise la police Atkinson Hyperlegible pour une lecture facilitée.</p>
+        </div>
     </footer>
 
     <script>
