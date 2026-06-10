@@ -80,14 +80,6 @@ async function refreshLatest() {
     card.querySelector(".sensor-value").textContent = p.valeur ?? "—";
     card.querySelector(".sensor-time").textContent = p.created_at ? fmtDate(p.created_at) : "—";
 
-    const zoneEl = card.querySelector(".sensor-zone");
-    if (p.zone) {
-      zoneEl.classList.remove("d-none");
-      zoneEl.textContent = p.zone;
-    } else {
-      zoneEl.classList.add("d-none");
-    }
-
     const isAlert = !!p.buzzer_on;
     setCardState(card, isAlert);
   });

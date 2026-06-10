@@ -50,11 +50,6 @@
             <div class="small text-muted mt-2">
               Dernière maj :
               <span class="sensor-time">{{ row.created_at|fmt_dt if row else "—" }}</span>
-              {% if row and row.zone %}
-                • Zone : <span class="sensor-zone">{{ row.zone }}</span>
-              {% else %}
-                <span class="sensor-zone d-none"></span>
-              {% endif %}
             </div>
           </div>
           <div class="card-footer bg-white border-top-0 pt-0">

@@ -166,18 +166,16 @@ def create_app() -> Flask:
 
             execute(
                 """
-                INSERT INTO seuils_config (capteur_type, seuil_min, seuil_max)
-                VALUES (%s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                  seuil_min=VALUES(seuil_min),
-                  seuil_max=VALUES(seuil_max)
+                UPDATE capteurs 
+                SET seuilmin = %s, seuilmax = %s
+                WHERE type = %s
                 """,
-                (capteur_type, seuil_min, seuil_max),
+                (seuil_min, seuil_max, capteur_type),
             )
             flash("Seuil mis à jour.", "success")
             return redirect(url_for("gestion"))
 
-        seuils = query_all("SELECT capteur_type, seuil_min, seuil_max, updated_at FROM seuils_config")
+        seuils = query_all("SELECT type as capteur_type, seuilmin as seuil_min, seuilmax as seuil_max FROM capteurs")
         seuils_map = {row["capteur_type"]: row for row in seuils}
         # Garantie d'un ordre stable dans l'UI
         ordered = []
@@ -185,7 +183,7 @@ def create_app() -> Flask:
             ordered.append(
                 seuils_map.get(
                     t,
-                    {"capteur_type": t, "seuil_min": None, "seuil_max": None, "updated_at": None},
+                    {"capteur_type": t, "seuil_min": None, "seuil_max": None},
                 )
             )
         return render_template("gestion.html", seuils=ordered)
@@ -215,7 +213,6 @@ def create_app() -> Flask:
             payload[capteur_type] = {
                 "capteur_type": capteur_type,
                 "valeur": row["valeur"] if row else None,
-                "zone": row.get("zone") if row else None,
                 "buzzer_on": int(row["buzzer_on"]) if row else 0,
                 "created_at": row["created_at"].isoformat() if row and row.get("created_at") else None,
                 "seuil_min": seuils.get(capteur_type, {}).get("seuil_min"),
@@ -230,30 +227,33 @@ def create_app() -> Flask:
         if capteur_type not in CAPTEURS:
             return jsonify({"error": "capteur_type invalide"}), 400
 
+        seuils = get_thresholds_map()
         rows = query_all(
             """
-            SELECT valeur, buzzer_on, created_at
-            FROM mine_donnees
-            WHERE capteur_type=%s
-            ORDER BY created_at DESC
+            SELECT c.valeur, c.date as created_at
+            FROM captures c
+            JOIN capteurs s ON c.idCapteur = s.id
+            WHERE s.type = %s
+            ORDER BY c.date DESC
             LIMIT 10
             """,
             (capteur_type,),
         )
         rows.reverse()
-        return jsonify(
-            {
-                "capteur_type": capteur_type,
-                "points": [
-                    {
-                        "valeur": r["valeur"],
-                        "buzzer_on": int(r["buzzer_on"]),
-                        "created_at": r["created_at"].isoformat() if r.get("created_at") else None,
-                    }
-                    for r in rows
-                ],
-            }
-        )
+        
+        points = []
+        for r in rows:
+            is_alert, _ = compute_buzzer_state(capteur_type, r["valeur"], seuils.get(capteur_type))
+            points.append({
+                "valeur": r["valeur"],
+                "buzzer_on": 1 if is_alert else 0,
+                "created_at": r["created_at"].isoformat() if r.get("created_at") else None,
+            })
+            
+        return jsonify({
+            "capteur_type": capteur_type,
+            "points": points
+        })
 
     @app.get("/api/meteo")
     @login_required
@@ -276,7 +276,6 @@ def create_app() -> Flask:
 
         data = request.get_json(silent=True) or {}
         capteur_type = (data.get("capteur_type") or data.get("type") or "").strip().lower()
-        zone = (data.get("zone") or None)
         valeur = data.get("valeur", None)
 
         if capteur_type not in CAPTEURS:
@@ -286,15 +285,20 @@ def create_app() -> Flask:
         except (TypeError, ValueError):
             return jsonify({"error": "valeur invalide"}), 400
 
+        # Trouver l'ID du capteur
+        capteur = query_one("SELECT id FROM capteurs WHERE type = %s", (capteur_type,))
+        if not capteur:
+            return jsonify({"error": "capteur non configuré en BDD"}), 404
+
         seuils = get_thresholds_map()
-        buzzer_on, reason = compute_buzzer_state(capteur_type, valeur_f, zone, seuils.get(capteur_type))
+        buzzer_on, reason = compute_buzzer_state(capteur_type, valeur_f, seuils.get(capteur_type))
 
         execute(
             """
-            INSERT INTO mine_donnees (capteur_type, valeur, zone, buzzer_on)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO captures (idCapteur, valeur)
+            VALUES (%s, %s)
             """,
-            (capteur_type, valeur_f, zone, int(buzzer_on)),
+            (capteur["id"], valeur_f),
         )
 
         if buzzer_on and capteur_type in ("co2", "ch4"):
@@ -422,24 +426,23 @@ def parse_float_or_none(value: str) -> Optional[float]:
 
 
 def get_thresholds_map() -> Dict[str, Dict[str, Optional[float]]]:
-    rows = query_all("SELECT capteur_type, seuil_min, seuil_max FROM seuils_config")
+    rows = query_all("SELECT type, seuilmin, seuilmax FROM capteurs")
     out: Dict[str, Dict[str, Optional[float]]] = {}
     for r in rows:
-        out[r["capteur_type"]] = {"seuil_min": r["seuil_min"], "seuil_max": r["seuil_max"]}
+        out[r["type"]] = {"seuil_min": r["seuilmin"], "seuil_max": r["seuilmax"]}
     return out
 
 
 def compute_buzzer_state(
     capteur_type: str,
     valeur: float,
-    zone: Optional[str],
     seuil: Optional[Dict[str, Optional[float]]],
 ) -> Tuple[bool, str]:
     """
     Règles demandées :
     - température/humidité : alerte si valeur > seuil_max
     - lumière : alerte inverse si valeur < seuil_min
-    - présence : alerte si valeur == 1 (et optionnellement zone interdite)
+    - présence : alerte si valeur == 1
     - CO2/CH4 : alerte si valeur > seuil_max
     """
     seuil_min = (seuil or {}).get("seuil_min")
@@ -449,15 +452,13 @@ def compute_buzzer_state(
         return True, f"Lumière trop faible (< {seuil_min})"
 
     if capteur_type == "presence":
-        # Simplification : toute détection = alerte (vous pouvez raffiner avec la colonne zone).
-        if int(valeur) == 1 and (zone is None or str(zone).lower() != "autorisee"):
+        if int(valeur) == 1:
             return True, "Présence détectée"
         return False, "OK"
 
     if seuil_max is not None and valeur > float(seuil_max):
         return True, f"Dépassement (> {seuil_max})"
 
-    # Si un seuil_min est défini pour d'autres capteurs, on peut aussi le prendre en compte.
     if seuil_min is not None and valeur < float(seuil_min):
         return True, f"Sous-seuil (< {seuil_min})"
 
@@ -465,20 +466,40 @@ def compute_buzzer_state(
 
 
 def get_latest_readings() -> Dict[str, Dict[str, Any]]:
+    # On récupère le dernier id de capture pour chaque capteur
     rows = query_all(
         """
-        SELECT md.*
-        FROM mine_donnees md
-        JOIN (
-            SELECT capteur_type, MAX(id) AS max_id
-            FROM mine_donnees
-            GROUP BY capteur_type
-        ) t ON md.capteur_type = t.capteur_type AND md.id = t.max_id
+        SELECT c.type as capteur_type, cap.valeur, cap.date as created_at
+        FROM capteurs c
+        LEFT JOIN (
+            SELECT idCapteur, valeur, date
+            FROM captures
+            WHERE (idCapteur, id) IN (
+                SELECT idCapteur, MAX(id)
+                FROM captures
+                GROUP BY idCapteur
+            )
+        ) cap ON c.id = cap.idCapteur
         """
     )
+    
+    seuils = get_thresholds_map()
     out: Dict[str, Dict[str, Any]] = {}
     for r in rows:
-        out[r["capteur_type"]] = r
+        capteur_type = r["capteur_type"]
+        valeur = r["valeur"]
+        
+        buzzer_on = 0
+        if valeur is not None:
+            is_alert, _ = compute_buzzer_state(capteur_type, valeur, seuils.get(capteur_type))
+            buzzer_on = 1 if is_alert else 0
+            
+        out[capteur_type] = {
+            "capteur_type": capteur_type,
+            "valeur": valeur,
+            "created_at": r["created_at"],
+            "buzzer_on": buzzer_on
+        }
     return out
 
 
