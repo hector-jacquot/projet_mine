@@ -1,100 +1,143 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ APP_NAME }}{% if title %} - {{ title }}{% endif %}</title>
-
-    <!-- Bootstrap 5 -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    
+    <!-- Préchargement de la police accessible -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand fw-semibold" href="{{ url_for('index') }}">{{ APP_NAME }}</a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('index') }}">Accueil</a>
-            </li>
-            {% if user %}
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('affichage') }}">Dashboard</a>
-              </li>
-              {% if user.role == 'admin' %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{{ url_for('gestion') }}">Gestion</a>
-                </li>
-              {% endif %}
-            {% endif %}
-          </ul>
+</head>
+<body data-theme="light">
+    <!-- Lien d'évitement pour l'accessibilité clavier -->
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
 
-          <ul class="navbar-nav">
-            {% if user %}
-              <li class="nav-item">
-                <span class="navbar-text me-3 text-white-50">{{ user.email }}</span>
-              </li>
-              <li class="nav-item">
-                <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">Déconnexion</a>
-              </li>
-            {% else %}
-              <li class="nav-item me-2">
-                <a class="btn btn-outline-light btn-sm" href="{{ url_for('login') }}">Connexion</a>
-              </li>
-              <li class="nav-item">
-                <a class="btn btn-warning btn-sm" href="{{ url_for('register') }}">Inscription</a>
-              </li>
-            {% endif %}
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <header role="banner">
+        <nav class="container" role="navigation" aria-label="Menu principal">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem 0; border-bottom: 2px solid var(--border-color);">
+                <a href="{{ url_for('index') }}" class="fw-bold" style="font-size: 1.5rem; text-decoration: none; color: var(--text-color);">
+                    {{ APP_NAME }}
+                </a>
+                
+                <ul style="display: flex; list-style: none; gap: 1.5rem; margin: 0; padding: 0;">
+                    <li><a href="{{ url_for('index') }}">Accueil</a></li>
+                    {% if user %}
+                        <li><a href="{{ url_for('affichage') }}">Dashboard</a></li>
+                        {% if user.role == 'admin' %}
+                            <li><a href="{{ url_for('gestion') }}">Gestion</a></li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
 
-    <main class="container my-4">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <!-- Contrôles d'accessibilité -->
+                    <div role="group" aria-label="Paramètres d'accessibilité">
+                        <button id="theme-toggle" class="btn btn-outline" aria-pressed="false" style="padding: 0.5rem 1rem;">
+                            Mode Sombre
+                        </button>
+                        <button id="contrast-toggle" class="btn btn-outline" aria-pressed="false" style="padding: 0.5rem 1rem;">
+                            Contraste Élevé
+                        </button>
+                    </div>
+
+                    {% if user %}
+                        <a href="{{ url_for('logout') }}" class="btn">Déconnexion</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline">Connexion</a>
+                        <a href="{{ url_for('register') }}" class="btn">Inscription</a>
+                    {% endif %}
+                </div>
             </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+        </nav>
+    </header>
 
-      {% block content %}{% endblock %}
+    <main id="main-content" role="main" class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert" aria-live="polite">
+                        {% if category == 'success' %}
+                            <span aria-hidden="true">✅</span>
+                        {% else %}
+                            <span aria-hidden="true">⚠️</span>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
     </main>
 
-    <footer class="border-top py-4">
-      <div class="container small text-muted">
-        Projet IoT ISEP - {{ APP_NAME }}. Démo pédagogique (Flask + MySQL).
-      </div>
+    <footer role="contentinfo" class="container" style="margin-top: 4rem; padding: 2rem 0; border-top: 2px solid var(--border-color); text-align: center;">
+        <p>Projet IoT ISEP - {{ APP_NAME }}. Démo pédagogique accessible et inclusive.</p>
+        <p style="font-size: 0.9rem;">Utilise la police Atkinson Hyperlegible pour une lecture facilitée.</p>
     </footer>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-      crossorigin="anonymous"
-    ></script>
-    {% block scripts %}{% endblock %}
-  </body>
-</html>
+    <script>
+        // Gestion des thèmes et de l'accessibilité
+        const themeBtn = document.getElementById('theme-toggle');
+        const contrastBtn = document.getElementById('contrast-toggle');
+        const body = document.body;
 
+        // On mémorise le dernier thème non "contraste élevé"
+        let lastNormalTheme = localStorage.getItem('mine-normal-theme') || 'light';
+
+        function updateAriaPressed() {
+            const current = body.getAttribute('data-theme');
+            themeBtn.setAttribute('aria-pressed', lastNormalTheme === 'dark');
+            contrastBtn.setAttribute('aria-pressed', current === 'high-contrast');
+            
+            // Mettre à jour les textes des boutons
+            themeBtn.textContent = lastNormalTheme === 'dark' ? 'Mode Clair' : 'Mode Sombre';
+            contrastBtn.textContent = current === 'high-contrast' ? 'Mode Normal' : 'Contraste Élevé';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            // Inversion du dernier thème normal (light <-> dark)
+            lastNormalTheme = lastNormalTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('mine-normal-theme', lastNormalTheme);
+            
+            // On applique et sauvegarde si on n'est pas en contraste élevé
+            if (body.getAttribute('data-theme') !== 'high-contrast') {
+                body.setAttribute('data-theme', lastNormalTheme);
+                localStorage.setItem('mine-theme', lastNormalTheme);
+            }
+            updateAriaPressed();
+        });
+
+        contrastBtn.addEventListener('click', () => {
+            const current = body.getAttribute('data-theme');
+            if (current === 'high-contrast') {
+                // Repasser au dernier thème normal
+                body.setAttribute('data-theme', lastNormalTheme);
+            } else {
+                // Passer en contraste élevé
+                body.setAttribute('data-theme', 'high-contrast');
+            }
+            updateAriaPressed();
+            localStorage.setItem('mine-theme', body.getAttribute('data-theme'));
+        });
+
+        // Charger la préférence utilisateur au chargement
+        const savedTheme = localStorage.getItem('mine-theme');
+        if (savedTheme) {
+            // Si on a sauvegardé un contraste élevé, on charge ça
+            if (savedTheme === 'high-contrast') {
+                body.setAttribute('data-theme', 'high-contrast');
+            } else {
+                // Sinon, on charge le thème normal sauvegardé
+                lastNormalTheme = savedTheme;
+                body.setAttribute('data-theme', lastNormalTheme);
+            }
+            updateAriaPressed();
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

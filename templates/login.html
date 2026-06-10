@@ -2,35 +2,44 @@
 {% set title = "Connexion" %}
 
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h1 class="h5 mb-3">Connexion</h1>
-          <form method="post" novalidate>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+<section aria-labelledby="login-title" style="max-width: 40rem; margin: 4rem auto;">
+    <h1 id="login-title">Connexion à votre espace</h1>
+    <p>Veuillez entrer vos identifiants pour accéder au dashboard de la mine.</p>
 
-            <div class="mb-3">
-              <label class="form-label" for="email">Email</label>
-              <input class="form-control" id="email" name="email" type="email" required autocomplete="email" />
-            </div>
+    <form method="post" novalidate style="margin-top: 2rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
 
-            <div class="mb-3">
-              <label class="form-label" for="password">Mot de passe</label>
-              <input class="form-control" id="password" name="password" type="password" required autocomplete="current-password" />
-            </div>
-
-            <button class="btn btn-primary w-100" type="submit">Se connecter</button>
-          </form>
-
-          <hr />
-          <p class="small mb-0">
-            Pas de compte ?
-            <a href="{{ url_for('register') }}">Créer un compte</a>.
-          </p>
+        <div class="form-group">
+            <label for="email">Adresse Email</label>
+            <input 
+                id="email" 
+                name="email" 
+                type="email" 
+                required 
+                autocomplete="email" 
+                aria-required="true"
+                placeholder="ex: jean.dupont@isep.fr"
+            />
         </div>
-      </div>
-    </div>
-  </div>
-{% endblock %}
 
+        <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input 
+                id="password" 
+                name="password" 
+                type="password" 
+                required 
+                autocomplete="current-password" 
+                aria-required="true"
+            />
+        </div>
+
+        <button class="btn" type="submit" style="width: 100%;">Se connecter</button>
+    </form>
+
+    <p style="margin-top: 2rem;">
+        Pas encore de compte ? 
+        <a href="{{ url_for('register') }}">Inscrivez-vous ici</a>.
+    </p>
+</section>
+{% endblock %}
