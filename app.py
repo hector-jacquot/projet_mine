@@ -111,7 +111,7 @@ def create_app() -> Flask:
 
             password_hash = generate_password_hash(password)
             execute(
-                "INSERT INTO utilisateurs (email, password_hash, role) VALUES (%s, %s, 'user')",
+                "INSERT INTO utilisateurs (email, password, role) VALUES (%s, %s, 'user')",
                 (email, password_hash),
             )
             flash("Compte créé. Vous pouvez vous connecter.", "success")
@@ -127,10 +127,10 @@ def create_app() -> Flask:
             password = request.form.get("password") or ""
 
             user = query_one(
-                "SELECT id, email, password_hash, role FROM utilisateurs WHERE email=%s",
+                "SELECT id, email, password, role FROM utilisateurs WHERE email=%s",
                 (email,),
             )
-            if not user or not check_password_hash(user["password_hash"], password):
+            if not user or not check_password_hash(user["password"], password):
                 flash("Identifiants invalides.", "danger")
                 return render_template("login.html"), 401
 
@@ -306,6 +306,23 @@ def create_app() -> Flask:
 
         return jsonify({"ok": True, "buzzer_on": int(buzzer_on), "reason": reason})
 
+    # Route TEMPORAIRE pour voir le schéma de la BDD
+    @app.get("/debug/schema")
+    def debug_schema():
+        try:
+            # Voir les colonnes de la table utilisateurs
+            cols = query_all("DESCRIBE utilisateurs")
+            
+            # Voir toutes les tables
+            tables = query_all("SHOW TABLES")
+            
+            return jsonify({
+                "tables": tables,
+                "utilisateurs_columns": cols
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)})
+
     # Bootstrap éventuel d'un admin
     try:
         ensure_admin_bootstrap()
@@ -327,13 +344,13 @@ def get_db():
     ssl_config = None
     # Sur Windows avec Railway, SSL est souvent nécessaire pour éviter le "Lost connection"
     if "rlwy.net" in host or os.environ.get("MYSQL_SSL", "0") == "1":
-        ssl_config = {"ssl": {}} 
+        ssl_config = {"ssl": {"check_hostname": False}}  # Désactiver vérification hostname pour Railway
 
     # DEBUG: Décommentez la ligne suivante si vous avez un doute sur le chargement du .env
-    # print(f"DEBUG: Connexion à {user}@{host}:{port}/{db_name} (SSL: {ssl_config is not None})")
+    print(f"DEBUG: Tentative de connexion à {user}@{host}:{port}/{db_name} (SSL: {ssl_config is not None})")
 
     try:
-        return pymysql.connect(
+        conn = pymysql.connect(
             host=host,
             port=port,
             user=user,
@@ -343,12 +360,19 @@ def get_db():
             cursorclass=pymysql.cursors.DictCursor,
             autocommit=True,
             ssl=ssl_config,
-            connect_timeout=10,
+            connect_timeout=30,
+            read_timeout=30,
+            write_timeout=30,
         )
+        # Tester la connexion immédiatement
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+        return conn
     except pymysql.err.OperationalError as e:
-        print(f"\n[ERREUR SQL] Impossible de se connecter à la base de données.")
+        print(f"\n[ERREUR SQL FATALE] Impossible de se connecter à la base de données.")
         print(f"Host: {host}, Port: {port}, User: {user}, DB: {db_name}")
         print(f"Détail: {e}\n")
+        print("Vérifiez: 1) Les credentials dans .env  2) Si la BDD Railway est activée  3) Votre connexion internet")
         raise e
 
 
@@ -584,7 +608,7 @@ def ensure_admin_bootstrap():
         return
 
     execute(
-        "INSERT INTO utilisateurs (email, password_hash, role) VALUES (%s, %s, 'admin')",
+        "INSERT INTO utilisateurs (email, password, role) VALUES (%s, %s, 'admin')",
         (email, generate_password_hash(password)),
     )
 
