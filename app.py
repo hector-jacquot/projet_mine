@@ -493,7 +493,7 @@ def get_latest_readings() -> Dict[str, Dict[str, Any]]:
     # On récupère le dernier id de capture pour chaque capteur
     rows = query_all(
         """
-        SELECT c.type as capteur_type, cap.valeur, cap.date as created_at
+        SELECT c.type as capteur_type, cap.valeur, cap.date as created_at, c.seuilmin, c.seuilmax
         FROM capteurs c
         LEFT JOIN (
             SELECT idCapteur, valeur, date
@@ -513,9 +513,13 @@ def get_latest_readings() -> Dict[str, Dict[str, Any]]:
         capteur_type = r["capteur_type"]
         valeur = r["valeur"]
         
+        # Debug : affiche les valeurs et seuils pour chaque capteur
+        print(f"[DEBUG] Capteur: {capteur_type}, Valeur: {valeur}, Seuil_min: {r['seuilmin']}, Seuil_max: {r['seuilmax']}")
+        
         buzzer_on = 0
         if valeur is not None:
-            is_alert, _ = compute_buzzer_state(capteur_type, valeur, seuils.get(capteur_type))
+            is_alert, reason = compute_buzzer_state(capteur_type, valeur, seuils.get(capteur_type))
+            print(f"[DEBUG] {capteur_type} -> Alerte: {is_alert}, Raison: {reason}")
             buzzer_on = 1 if is_alert else 0
             
         out[capteur_type] = {

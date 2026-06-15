@@ -11,7 +11,7 @@
     <p>Suivi en temps réel des conditions de sécurité.</p>
     
     <div style="background: var(--secondary-color); color: var(--bg-color); padding: 1rem; border-radius: 0.5rem; display: inline-block; margin-top: 1rem;">
-        <span id="outside-temp-label">Température extérieure (Open-Meteo) :</span>
+        <span id="outside-temp-label">Température extérieure:</span>
         <strong aria-labelledby="outside-temp-label">
             {% if outside.ok and outside.temp_c is not none %}
                 {{ outside.temp_c }} °C
@@ -37,12 +37,12 @@
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                 <span style="font-weight: 700;">Statut :</span>
                 {% if buzzer %}
-                    <span style="color: var(--alert-danger); font-weight: 700; text-decoration: underline;">
-                        ALERTE / BUZZER ON
+                    <span class="sensor-status" style="color: var(--alert-danger); font-weight: 700; text-decoration: underline;">
+                        ALERTE
                     </span>
                 {% else %}
-                    <span style="color: var(--alert-success); font-weight: 700;">
-                        SÉCURISÉ / OK
+                    <span class="sensor-status" style="color: var(--alert-success); font-weight: 700;">
+                        SÉCURISÉ
                     </span>
                 {% endif %}
             </div>

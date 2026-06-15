@@ -19,7 +19,6 @@
             <th>Capteur</th>
             <th class="text-nowrap">Seuil min</th>
             <th class="text-nowrap">Seuil max</th>
-            <th class="text-nowrap">Dernière maj</th>
             <th></th>
           </tr>
         </thead>
@@ -28,7 +27,6 @@
             <tr>
               <td class="fw-semibold">
                 {{ capteurs_meta[s.capteur_type].label }}
-                <span class="text-muted small">({{ s.capteur_type }})</span>
               </td>
               <td style="max-width: 180px;">
                   <input
@@ -50,7 +48,6 @@
                     form="form-{{ s.capteur_type }}"
                   />
               </td>
-              <td class="text-muted small">{{ s.updated_at|fmt_dt }}</td>
               <td class="text-end">
                 <form method="post" id="form-{{ s.capteur_type }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />

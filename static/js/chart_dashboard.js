@@ -7,11 +7,17 @@ function fmtDate(iso) {
 }
 
 function setCardState(cardEl, isAlert) {
-  cardEl.dataset.state = isAlert ? "alert" : "ok";
-  const badge = cardEl.querySelector(".sensor-badge");
-  badge.classList.toggle("bg-success", !isAlert);
-  badge.classList.toggle("bg-danger", isAlert);
-  badge.textContent = isAlert ? "ALERTE" : "OK";
+  // Basculer la classe alert-active pour la bordure
+  cardEl.classList.toggle("alert-active", isAlert);
+  
+  // Mettre à jour le texte du statut
+  const statusEl = cardEl.querySelector(".sensor-status");
+  if (statusEl) {
+    statusEl.textContent = isAlert ? "ALERTE" : "SÉCURISÉ";
+    // Mettre à jour les styles du statut
+    statusEl.style.color = isAlert ? "var(--alert-danger)" : "var(--alert-success)";
+    statusEl.style.textDecoration = isAlert ? "underline" : "none";
+  }
 }
 
 async function fetchJson(url) {
